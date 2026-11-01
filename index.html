@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fadi Calculator 2.1</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon-192.png">
+<meta name="theme-color" content="#102d59">
 <style>
     :root {
         --navy: #102d59;
@@ -120,6 +123,7 @@
         color: #18365d;
         font: 600 23px "Segoe UI", Arial, sans-serif;
         cursor: pointer;
+        touch-action: manipulation;
         box-shadow: 0 3px 0 #cbd8e8, 0 4px 8px rgba(20,55,95,.08);
         transition: transform .08s ease, filter .12s ease;
     }
@@ -190,7 +194,7 @@
         <div class="brand-icon" aria-hidden="true">ƒ</div>
         <div>
             <h1>Fadi Calculator</h1>
-            <div class="subtitle">Desktop Edition · 2.1</div>
+            <div class="subtitle">Mobile & Web · 2.1</div>
         </div>
     </header>
 
@@ -225,7 +229,7 @@
         <button data-action="decimal">.</button>
     </section>
 
-    <footer class="footer">Powered by Python</footer>
+    <footer class="footer">Created by Fadi Yazigi</footer>
 </main>
 
 <script>
@@ -241,7 +245,7 @@ let accumulator = null;
 let pendingOperator = null;
 let startNewNumber = false;
 let busy = false;
-let bridgeReady = false;
+
 let completedExpression = "";
 
 function symbol(op) {
@@ -305,10 +309,19 @@ function enterDecimal() {
 }
 
 async function callPython(left, right, operator) {
-    if (!bridgeReady || !window.pywebview || !window.pywebview.api) {
-        throw new Error("The Python engine is not ready. Please try again.");
+    const a = Number(left), b = Number(right);
+    if (!Number.isFinite(a) || !Number.isFinite(b)) throw new Error("Number too large.");
+    if (operator === "/" && b === 0) throw new Error("Cannot divide by zero.");
+    let result;
+    switch (operator) {
+      case "+": result = a + b; break;
+      case "-": result = a - b; break;
+      case "*": result = a * b; break;
+      case "/": result = a / b; break;
+      default: throw new Error("Unknown operator.");
     }
-    return await window.pywebview.api.calculate(left, right, operator);
+    if (!Number.isFinite(result)) throw new Error("Result too large.");
+    return {ok: true, result: String(Number(result.toPrecision(12)))};
 }
 
 async function calculate() {
@@ -356,10 +369,11 @@ async function selectOperator(operator) {
     // Complete the previous operation before storing the next operator.
     if (pendingOperator !== null && !startNewNumber) {
         await calculate();
+        if (statusLine.textContent) return;
     }
 
     // If the previous calculation failed, do not chain from the error.
-    if (pendingOperator !== null) return;
+    if (pendingOperator !== null || statusLine.textContent) return;
 
     accumulator = current;
     pendingOperator = operator;
@@ -414,10 +428,13 @@ document.addEventListener("keydown", async event => {
     }
 });
 
-window.addEventListener("pywebviewready", () => {
-    bridgeReady = true;
-    statusLine.textContent = "";
-});
+if ("serviceWorker" in navigator && location.protocol !== "file:") {
+    window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch(() => {
+            statusLine.textContent = "Offline setup unavailable. Reload when online.";
+        });
+    });
+}
 
 render();
 </script>

@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fadi Calculator 2.1</title>
+<style>
+    :root {
+        --navy: #102d59;
+        --blue: #1769c2;
+        --blue2: #2589ed;
+        --pale: #edf4fd;
+        --ink: #142b4d;
+        --line: #c6d6eb;
+    }
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 18px;
+        background: linear-gradient(145deg, #dceaff, #f4f8ff 55%, #d5e6fc);
+        font-family: "Segoe UI", Arial, sans-serif;
+        color: var(--ink);
+        user-select: none;
+    }
+    .app {
+        width: 100%;
+        max-width: 390px;
+        padding: 19px;
+        border: 1px solid #b8cce6;
+        border-radius: 22px;
+        background: #f8fbff;
+        box-shadow: 0 18px 45px rgba(20, 58, 105, .20),
+                    0 3px 8px rgba(20, 58, 105, .10);
+    }
+    .brand {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        margin-bottom: 17px;
+    }
+    .brand-icon {
+        width: 43px;
+        height: 43px;
+        flex: 0 0 43px;
+        border-radius: 12px;
+        background: linear-gradient(145deg, #278df0, #0750a8);
+        box-shadow: inset 0 1px 2px rgba(255,255,255,.65),
+                    0 3px 8px rgba(12,70,140,.22);
+        display: grid;
+        place-items: center;
+        color: white;
+        font-size: 25px;
+        font-weight: 700;
+        border: 1px solid #0d57a7;
+    }
+    h1 {
+        margin: 0;
+        color: var(--navy);
+        font-size: 20px;
+        letter-spacing: .1px;
+    }
+    .subtitle {
+        margin-top: 3px;
+        color: #68809e;
+        font-size: 11px;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+    }
+    .display-wrap {
+        padding: 5px;
+        margin-bottom: 15px;
+        border: 1px solid #b6cbe5;
+        border-radius: 13px;
+        background: linear-gradient(180deg, #eaf3ff, #dceaff);
+        box-shadow: inset 0 2px 5px rgba(28,72,125,.10);
+    }
+    #expression {
+        min-height: 24px;
+        padding: 6px 13px 0;
+        text-align: right;
+        color: #55749c;
+        font-size: 16px;
+        overflow-wrap: anywhere;
+    }
+    #display {
+        width: 100%;
+        height: 75px;
+        padding: 8px 12px;
+        border: 0;
+        outline: none;
+        background: transparent;
+        color: #102b50;
+        text-align: right;
+        font-family: "Segoe UI", Arial, sans-serif;
+        font-size: 34px;
+        font-weight: 600;
+        letter-spacing: .3px;
+    }
+    #status {
+        min-height: 19px;
+        margin: -7px 2px 8px;
+        color: #b3261e;
+        font-size: 12px;
+        text-align: center;
+    }
+    .keys {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 9px;
+    }
+    button {
+        height: 62px;
+        border: 1px solid #c1d0e3;
+        border-radius: 12px;
+        background: linear-gradient(180deg, #ffffff, #e8eff9);
+        color: #18365d;
+        font: 600 23px "Segoe UI", Arial, sans-serif;
+        cursor: pointer;
+        box-shadow: 0 3px 0 #cbd8e8, 0 4px 8px rgba(20,55,95,.08);
+        transition: transform .08s ease, filter .12s ease;
+    }
+    button:hover { filter: brightness(.97); }
+    button:active {
+        transform: translateY(2px);
+        box-shadow: 0 1px 0 #cbd8e8;
+    }
+    button:focus-visible {
+        outline: 3px solid #70b7ff;
+        outline-offset: 2px;
+    }
+    button:disabled { opacity: .65; cursor: wait; }
+    .operator {
+        background: linear-gradient(180deg, #3a98ef, #1768bf);
+        border-color: #145eae;
+        color: white;
+        box-shadow: 0 3px 0 #104d91, 0 4px 8px rgba(20,55,95,.12);
+    }
+    .clear {
+        background: linear-gradient(180deg, #267fd4, #155ba8);
+        border-color: #104f94;
+        color: white;
+    }
+    .equals {
+        background: linear-gradient(180deg, #145db5, #0b438d);
+        border-color: #0b438d;
+        color: white;
+        grid-row: span 2;
+        height: auto;
+    }
+    .zero { grid-column: span 2; }
+    .footer {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        margin-top: 17px;
+        color: #7287a2;
+        font-size: 10px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+    .footer::before, .footer::after {
+        content: "";
+        height: 1px;
+        flex: 1;
+        background: #d2deed;
+    }
+    @media (max-height: 650px) {
+        body { padding: 8px; }
+        .app { padding: 14px; }
+        button { height: 54px; }
+        #expression {
+        min-height: 24px;
+        padding: 6px 13px 0;
+        text-align: right;
+        color: #55749c;
+        font-size: 16px;
+        overflow-wrap: anywhere;
+    }
+    #display { height: 65px; }
+    }
+</style>
+</head>
+<body>
+<main class="app">
+    <header class="brand">
+        <div class="brand-icon" aria-hidden="true">ƒ</div>
+        <div>
+            <h1>Fadi Calculator</h1>
+            <div class="subtitle">Desktop Edition · 2.1</div>
+        </div>
+    </header>
+
+    <div class="display-wrap">
+        <div id="expression" aria-live="polite"></div>
+        <input id="display" type="text" value="0" readonly
+               aria-label="Calculator display">
+    </div>
+    <div id="status" role="status" aria-live="polite"></div>
+
+    <section class="keys" aria-label="Calculator keypad">
+        <button class="clear" data-action="clear">C</button>
+        <button class="operator" data-action="operator" data-value="/">÷</button>
+        <button class="operator" data-action="operator" data-value="*">×</button>
+        <button class="operator" data-action="operator" data-value="-">−</button>
+
+        <button data-action="digit" data-value="7">7</button>
+        <button data-action="digit" data-value="8">8</button>
+        <button data-action="digit" data-value="9">9</button>
+        <button class="operator" data-action="operator" data-value="+">+</button>
+
+        <button data-action="digit" data-value="4">4</button>
+        <button data-action="digit" data-value="5">5</button>
+        <button data-action="digit" data-value="6">6</button>
+        <button class="equals" data-action="equals">=</button>
+
+        <button data-action="digit" data-value="1">1</button>
+        <button data-action="digit" data-value="2">2</button>
+        <button data-action="digit" data-value="3">3</button>
+
+        <button class="zero" data-action="digit" data-value="0">0</button>
+        <button data-action="decimal">.</button>
+    </section>
+
+    <footer class="footer">Powered by Python</footer>
+</main>
+
+<script>
+"use strict";
+
+const display = document.getElementById("display");
+const expression = document.getElementById("expression");
+const statusLine = document.getElementById("status");
+const keyPanel = document.querySelector(".keys");
+
+let current = "0";
+let accumulator = null;
+let pendingOperator = null;
+let startNewNumber = false;
+let busy = false;
+let bridgeReady = false;
+let completedExpression = "";
+
+function symbol(op) {
+    return ({"+": "+", "-": "−", "*": "×", "/": "÷"})[op] || op;
+}
+
+function render() {
+    display.value = current;
+    if (pendingOperator !== null && accumulator !== null) {
+        expression.textContent = accumulator + " " + symbol(pendingOperator) +
+            (startNewNumber ? "" : " " + current);
+    } else {
+        expression.textContent = completedExpression;
+    }
+}
+
+function setBusy(value) {
+    busy = value;
+    keyPanel.querySelectorAll("button").forEach(button => {
+        button.disabled = value;
+    });
+}
+
+function clearCalculator() {
+    if (busy) return;
+    current = "0";
+    accumulator = null;
+    pendingOperator = null;
+    startNewNumber = false;
+    statusLine.textContent = "";
+    completedExpression = "";
+    render();
+}
+
+function enterDigit(digit) {
+    if (busy) return;
+    statusLine.textContent = "";
+    if (pendingOperator === null) completedExpression = "";
+
+    if (startNewNumber) {
+        current = digit;
+        startNewNumber = false;
+    } else {
+        current = current === "0" ? digit : current + digit;
+    }
+    render();
+}
+
+function enterDecimal() {
+    if (busy) return;
+    statusLine.textContent = "";
+    if (pendingOperator === null) completedExpression = "";
+
+    if (startNewNumber) {
+        current = "0.";
+        startNewNumber = false;
+    } else if (!current.includes(".")) {
+        current += ".";
+    }
+    render();
+}
+
+async function callPython(left, right, operator) {
+    if (!bridgeReady || !window.pywebview || !window.pywebview.api) {
+        throw new Error("The Python engine is not ready. Please try again.");
+    }
+    return await window.pywebview.api.calculate(left, right, operator);
+}
+
+async function calculate() {
+    if (busy || accumulator === null || pendingOperator === null || startNewNumber) {
+        return;
+    }
+
+    const left = accumulator;
+    const right = current;
+    const operator = pendingOperator;
+
+    setBusy(true);
+    statusLine.textContent = "Calculating…";
+
+    try {
+        const response = await callPython(left, right, operator);
+
+        if (!response || response.ok !== true) {
+            throw new Error(response?.error || "Calculation failed.");
+        }
+
+        completedExpression = left + " " + symbol(operator) + " " + right + " =";
+        current = response.result;
+        accumulator = null;
+        pendingOperator = null;
+        startNewNumber = true;
+        statusLine.textContent = "";
+    } catch (error) {
+        completedExpression = left + " " + symbol(operator) + " " + right;
+        current = "0";
+        accumulator = null;
+        pendingOperator = null;
+        startNewNumber = true;
+        statusLine.textContent = error.message || "Unable to calculate.";
+    } finally {
+        setBusy(false);
+        render();
+    }
+}
+
+async function selectOperator(operator) {
+    if (busy) return;
+    statusLine.textContent = "";
+
+    // Complete the previous operation before storing the next operator.
+    if (pendingOperator !== null && !startNewNumber) {
+        await calculate();
+    }
+
+    // If the previous calculation failed, do not chain from the error.
+    if (pendingOperator !== null) return;
+
+    accumulator = current;
+    pendingOperator = operator;
+    completedExpression = "";
+    startNewNumber = true;
+    render();
+}
+
+keyPanel.addEventListener("click", async event => {
+    const button = event.target.closest("button");
+    if (!button || busy) return;
+
+    const action = button.dataset.action;
+    const value = button.dataset.value;
+
+    if (action === "clear") {
+        clearCalculator();
+    } else if (action === "digit") {
+        enterDigit(value);
+    } else if (action === "decimal") {
+        enterDecimal();
+    } else if (action === "operator") {
+        await selectOperator(value);
+    } else if (action === "equals") {
+        await calculate();
+    }
+});
+
+document.addEventListener("keydown", async event => {
+    if (/^[0-9]$/.test(event.key)) {
+        event.preventDefault();
+        enterDigit(event.key);
+    } else if (event.key === ".") {
+        event.preventDefault();
+        enterDecimal();
+    } else if (["+", "-", "*", "/"].includes(event.key)) {
+        event.preventDefault();
+        await selectOperator(event.key);
+    } else if (event.key === "Enter" || event.key === "=") {
+        event.preventDefault();
+        await calculate();
+    } else if (event.key === "Escape") {
+        event.preventDefault();
+        clearCalculator();
+    } else if (event.key === "Backspace") {
+        event.preventDefault();
+        if (!busy) {
+            if (pendingOperator === null) completedExpression = "";
+            current = current.length > 1 ? current.slice(0, -1) : "0";
+            render();
+        }
+    }
+});
+
+window.addEventListener("pywebviewready", () => {
+    bridgeReady = true;
+    statusLine.textContent = "";
+});
+
+render();
+</script>
+</body>
+</html>
